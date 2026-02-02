@@ -1,0 +1,49 @@
+services:
+  apisix:
+    image: apache/apisix:3.11.0-debian
+    restart: always
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+    ports:
+      - "9080:9080"
+    env_file:
+      - ../test/keys/.env
+    volumes:
+      - ./apisix/config.yaml:/usr/local/apisix/conf/config.yaml:ro,z
+      - ./apisix/apisix.yaml:/usr/local/apisix/conf/apisix.yaml:ro,z
+    networks:
+      - model-net
+
+  model-sentiment:
+    build:
+      context: ../models/sentiment
+    networks:
+      - model-net
+    depends_on:
+      - apisix
+    userns_mode: host
+
+  model-regression:
+    build:
+      context: ../models/regression
+    networks:
+      - model-net
+    depends_on:
+      - apisix
+    userns_mode: host
+
+  model-classification:
+    build:
+      context: ../models/classification
+    networks:
+      - model-net
+    depends_on:
+      - apisix
+    userns_mode: host
+
+networks:
+  model-net:
+    driver: bridge

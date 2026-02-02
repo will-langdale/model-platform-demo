@@ -1,0 +1,74 @@
+upstreams:
+  - id: 1
+    name: "sentiment"
+    nodes:
+      - host: "model-sentiment"
+        port: 8000
+        weight: 1
+    type: roundrobin
+  - id: 2
+    name: "regression"
+    nodes:
+      - host: "model-regression"
+        port: 8000
+        weight: 1
+    type: roundrobin
+  - id: 3
+    name: "classification"
+    nodes:
+      - host: "model-classification"
+        port: 8000
+        weight: 1
+    type: roundrobin
+
+consumers:
+  - username: "service_a"
+    plugins:
+      jwt-auth:
+        key: "iss_service_a"
+        algorithm: RS256
+        public_key: $env://SERVICE_A_PUBLIC_KEY
+  - username: "service_b"
+    plugins:
+      jwt-auth:
+        key: "iss_service_b"
+        algorithm: RS256
+        public_key: $env://SERVICE_B_PUBLIC_KEY
+
+  - username: "service_c"
+    plugins:
+      jwt-auth:
+        key: "iss_service_c"
+        algorithm: RS256
+        public_key: $env://SERVICE_C_PUBLIC_KEY
+
+routes:
+  - id: 1
+    uri: /predict/sentiment
+    upstream_id: 1
+    plugins:
+      jwt-auth: {}
+      consumer-restriction:
+        whitelist: ["service_a", "service_c"]
+      proxy-rewrite:
+        uri: /predict
+  - id: 2
+    uri: /predict/regression
+    upstream_id: 2
+    plugins:
+      jwt-auth: {}
+      consumer-restriction:
+        whitelist: ["service_a"]
+      proxy-rewrite:
+        uri: /predict
+  - id: 3
+    uri: /predict/classification
+    upstream_id: 3
+    plugins:
+      jwt-auth: {}
+      consumer-restriction:
+        whitelist: ["service_b", "service_c"]
+      proxy-rewrite:
+        uri: /predict
+
+#END

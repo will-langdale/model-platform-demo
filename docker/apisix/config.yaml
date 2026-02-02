@@ -1,0 +1,15 @@
+deployment:
+  role: data_plane
+  role_data_plane:
+    config_provider: yaml
+
+apisix:
+  node_listen: 9080
+  extra_lua_path: "/usr/local/apisix/?.lua"
+
+nginx_config:
+  error_log_level: warn
+  envs:
+    - SERVICE_A_PUBLIC_KEY
+    - SERVICE_B_PUBLIC_KEY
+    - SERVICE_C_PUBLIC_KEY
