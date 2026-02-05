@@ -1,0 +1,3 @@
+[submodule "hawk-proxy"]
+	path = hawk-proxy
+	url = git@github.com:will-langdale/hawk-proxy.git
