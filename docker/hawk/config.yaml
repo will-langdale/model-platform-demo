@@ -1,0 +1,52 @@
+upstreams:
+  - id: sentiment
+    nodes:
+      - host: model-sentiment
+        port: 8000
+  - id: regression
+    nodes:
+      - host: model-regression
+        port: 8000
+  - id: classification
+    nodes:
+      - host: model-classification
+        port: 8000
+
+consumers:
+  - name: service_a
+    hawk_id: service_a_id
+    hawk_key: $env://SERVICE_A_HAWK_KEY
+    algorithm: sha256
+  - name: service_b
+    hawk_id: service_b_id
+    hawk_key: $env://SERVICE_B_HAWK_KEY
+    algorithm: sha256
+  - name: service_c
+    hawk_id: service_c_id
+    hawk_key: $env://SERVICE_C_HAWK_KEY
+    algorithm: sha256
+
+routes:
+  - uri: /predict/sentiment
+    upstream: sentiment
+    rewrite_path: /predict
+    allowed_consumers:
+      - service_a
+      - service_c
+    methods:
+      - POST
+  - uri: /predict/regression
+    upstream: regression
+    rewrite_path: /predict
+    allowed_consumers:
+      - service_a
+    methods:
+      - POST
+  - uri: /predict/classification
+    upstream: classification
+    rewrite_path: /predict
+    allowed_consumers:
+      - service_b
+      - service_c
+    methods:
+      - POST

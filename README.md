@@ -2,12 +2,17 @@
 
 A demo to show two ways to host machine learning models with a simple authentication layer.
 
-We demonstrate an [APISIX](https://apisix.apache.org/) API gateway over a few simple models, deployed using two paradigms:
+We demonstrate two proxy options over a few simple models:
+
+1. [APISIX](https://apisix.apache.org/) with JWT auth and route-level allow lists
+2. [HAWK proxy](./hawk-proxy/README.md) with HAWK auth and route-level allow lists
+
+And two deployment paradigms:
 
 1. As standalone containers, using Docker, as if backed by [ECS](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/Welcome.html)
 2. [🚧 Planned] On a cluster, using Kubernetes, as if backed by [EKS](https://aws.amazon.com/eks/)
 
-Each incoming service authenticates with a self-signed JWT, and we declare which models the service can access in code.
+Each incoming service authenticates to the proxy, and each route declares which services can reach which model.
 
 ## Requirements
 
@@ -19,27 +24,50 @@ Each incoming service authenticates with a self-signed JWT, and we declare which
 
 ## Quickstart
 
-### Docker
+Generate JWT keys and HAWK shared keys.
 
-```bash
-# Generate keys 
+```shell
 just keygen
+```
 
-# Start services
-just docker
+### APISIX
 
-# Run smoke tests
-just test
+Start the docker containers.
+
+```shell
+just docker apisix
+```
+
+Run the smoke tests.
+
+```shell
+just test --apisix
+```
+
+### HAWK
+
+Start the docker containers.
+
+```shell
+just docker hawk
+```
+
+Run the smoke tests.
+
+```shell
+just test --hawk
 ```
 
 ## Architecture
 
 ### Authentication and authorisation
 
-Authentication and authorization are handled entirely by APISIX. Models never see tokens or make auth decisions.
+Authentication and authorisation are handled by the selected proxy. Models never see credentials or make auth decisions.
 
 - **Authentication** uses APISIX's `jwt-auth` plugin configured for RS256. Each consumer service holds an RSA private key and signs its own JWTs.
 - **Authorisation** uses APISIX's `consumer-restriction` plugin, configured as a whitelist on each route.
+- **Authentication** for HAWK uses shared keys per service and signed request headers.
+- **Authorisation** for HAWK uses `allowed_consumers` on each route in `docker/hawk/config.yaml`.
 
 ### Consumer permission matrix
 

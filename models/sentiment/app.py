@@ -10,6 +10,10 @@ import uvicorn
 
 app = FastAPI()
 
+@app.get("/health")
+async def health():
+    return {"status": "ok"}
+
 @app.post("/predict")
 async def predict(payload: dict):
     # Stub implementation - in a real app this would run ML inference
